@@ -1,0 +1,7 @@
+# transcript: recording.mp4
+# model: tiny / language: ja
+# generated-by: transcribe.py (faster-whisper, local)
+
+[00:00:04] FIXTURE_TRANSCRIPT_MARKER それでは、本日の定例を始めます。
+[00:00:11] 次回リリースの範囲について確認させてください。
+[00:01:37] 結合テストは来週金曜までに完了させる予定です。

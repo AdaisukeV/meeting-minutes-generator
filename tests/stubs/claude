@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# `claude` CLI のテスト用スタブ(docs/design/07-testing.md §3)。
+# 引数・stdin・cwd を記録し、STUB_STDOUT_FILE / STUB_EXIT で挙動を制御する。
+set -uo pipefail
+
+# 並列実行(--parallel N)の検証では追記方式が成立しない(複数プロセスが同じファイルへ
+# 同時に書いて行が混ざる)。STUB_CALL_DIR が指定されていれば呼び出しごとに専用ファイルへ書く。
+call_file=""
+if [[ -n "${STUB_CALL_DIR:-}" ]]; then
+  mkdir -p "$STUB_CALL_DIR"
+  call_file="$(mktemp "$STUB_CALL_DIR/call.XXXXXX")"
+  printf '%s\n' "$@" >"$call_file.args"
+elif [[ -n "${STUB_ARGS_FILE:-}" ]]; then
+  {
+    echo "--- claude ---"
+    printf '%s\n' "$@"
+  } >>"$STUB_ARGS_FILE"
+fi
+
+if [[ -n "${STUB_CWD_FILE:-}" ]]; then
+  pwd >>"$STUB_CWD_FILE"
+fi
+
+# stdin は必ず読み切る(呼び出し側の書き込みが SIGPIPE で失敗しないように)
+stdin_file="$(mktemp)"
+cat >"$stdin_file"
+if [[ -n "$call_file" ]]; then
+  cp "$stdin_file" "$call_file.stdin"
+elif [[ -n "${STUB_STDIN_FILE:-}" ]]; then
+  cat "$stdin_file" >>"$STUB_STDIN_FILE"
+fi
+
+# 経過表示(ハートビート)を検証するケースのために実行時間を伸ばす
+if [[ -n "${STUB_SLEEP_SECONDS:-}" ]]; then
+  sleep "$STUB_SLEEP_SECONDS"
+fi
+
+# 特定のパートのみを確実に失敗させる(完了順が不定でも狙ったパートを落とせる)
+if [[ -n "${STUB_FAIL_ON_STDIN_MATCH:-}" ]] &&
+  grep -qF -- "$STUB_FAIL_ON_STDIN_MATCH" "$stdin_file"; then
+  rm -f "$stdin_file"
+  # 実物の claude は API エラーを stdout へ書いてから非ゼロ終了する。
+  # 診断ログの保存を検証するケースのみ、その挙動を再現する。
+  if [[ -n "${STUB_FAIL_STDOUT:-}" ]]; then
+    echo "$STUB_FAIL_STDOUT"
+  fi
+  exit "${STUB_EXIT:-1}"
+fi
+rm -f "$stdin_file"
+
+if [[ -n "${STUB_STDOUT_FILE:-}" ]]; then
+  cat "$STUB_STDOUT_FILE"
+else
+  # 既定の出力は、そのステップの「1行目の契約」を満たす行から始める
+  # (generate_minutes.sh が先頭行を検証する。docs/design/02-generate-minutes.md §5.5)。
+  # ステップは --system-prompt-file の basename から判定する。指定が無い呼び出しでは
+  # 従来どおり1行だけを出す(先頭行を持たない呼び出しの検証を壊さないため)。
+  prompt_file=""
+  while (($# > 0)); do
+    if [[ "$1" == "--system-prompt-file" ]]; then
+      prompt_file="${2:-}"
+      break
+    fi
+    shift
+  done
+  case "$(basename "$prompt_file")" in
+  01_organize.md | 02_structure.md) echo "## 会議情報" ;;
+  03_format.md) echo "# 議事録: STUB" ;;
+  esac
+  echo "STUB CLAUDE OUTPUT"
+fi
+
+# STUB_FAIL_ON_STDIN_MATCH が指定されている場合、一致しない呼び出しは成功させる
+if [[ -n "${STUB_FAIL_ON_STDIN_MATCH:-}" ]]; then
+  exit 0
+fi
+exit "${STUB_EXIT:-0}"

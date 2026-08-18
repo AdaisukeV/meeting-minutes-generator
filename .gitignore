@@ -1,0 +1,25 @@
+# 機密データ(会議内容)
+inputs/
+outputs/
+
+# プロジェクト固有設定(実在の顧客名・個人名を含みうる)。雛形と動作確認用の sample のみ追跡する
+projects/*
+!projects/_template/
+!projects/sample/
+
+# 認証情報
+config/auth/active.env
+.env
+.env.*
+!*.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS / エディタ
+.DS_Store

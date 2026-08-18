@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# `aws` CLI のテスト用スタブ(docs/design/07-testing.md §3)。
+# サブコマンドごとに挙動を変える:
+#   sts get-caller-identity … STUB_AWS_STS_EXITS の値を呼び出し順に消費して終了
+#   sso login              … STUB_AWS_LOGIN_EXIT で終了
+set -uo pipefail
+
+if [[ -n "${STUB_ARGS_FILE:-}" ]]; then
+  {
+    echo "--- aws ---"
+    printf '%s\n' "$@"
+  } >>"$STUB_ARGS_FILE"
+fi
+
+if [[ -n "${STUB_CWD_FILE:-}" ]]; then
+  pwd >>"$STUB_CWD_FILE"
+fi
+
+state_dir="${STUB_STATE_DIR:-${TMPDIR:-/tmp}}"
+
+case "${1:-}${2:+ $2}" in
+"sts get-caller-identity")
+  counter="$state_dir/stub_aws_sts_count"
+  count=0
+  if [[ -f "$counter" ]]; then
+    count="$(cat "$counter")"
+  fi
+  echo "$((count + 1))" >"$counter"
+
+  # 値が尽きたら最後の値を繰り返す
+  read -r -a exits <<<"${STUB_AWS_STS_EXITS:-0}"
+  idx="$count"
+  if ((idx >= ${#exits[@]})); then
+    idx=$((${#exits[@]} - 1))
+  fi
+  status="${exits[$idx]}"
+
+  if [[ "$status" -eq 0 ]]; then
+    echo "${STUB_AWS_STS_ARN:-arn:aws:sts::000000000000:assumed-role/StubRole/stub-session}"
+  else
+    echo "stub: sts get-caller-identity failed" >&2
+  fi
+  exit "$status"
+  ;;
+"sso login")
+  exit "${STUB_AWS_LOGIN_EXIT:-0}"
+  ;;
+*)
+  echo "stub aws: unexpected subcommand: $*" >&2
+  exit 255
+  ;;
+esac

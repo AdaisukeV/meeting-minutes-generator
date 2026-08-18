@@ -1,0 +1,26 @@
+# テスト用の最小プロジェクト設定(架空)。
+# 本文中の FIXTURE_CONFIG_MARKER は「進捗出力に会議内容が混ざらないこと」の検証に使う。
+project: テスト案件 FIXTURE_CONFIG_MARKER
+
+companies:
+  - name: テスト株式会社
+    short_name: テスト社
+    role: 顧客
+  - name: 自社株式会社
+    short_name: 自社
+    role: 自社
+
+speakers:
+  - name: 試験 一郎
+    role: 部長
+    company: テスト株式会社
+    aliases: ["試験", "試験さん"]
+  - name: 検証 二郎
+    role: PM
+    company: 自社株式会社
+    aliases: ["検証", "検証さん"]
+
+minutes_sections:
+  - 会議概要
+  - 決定事項
+  - ToDo(担当者・期限)

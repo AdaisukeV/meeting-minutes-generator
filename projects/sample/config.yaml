@@ -1,0 +1,45 @@
+# 動作確認用のダミープロジェクト設定(架空の会社・人物)。
+# 実データを使わずにパイプライン全体を通すために置いている。
+# 実案件では cp -r projects/_template projects/<プロジェクト名> から始めること。
+project: サンプル在庫管理システム刷新
+
+companies:
+  - name: 架空商事株式会社
+    short_name: 架空商事
+    role: 顧客
+  - name: サンプルソフト株式会社
+    short_name: サンプルソフト
+    role: 自社
+
+speakers:
+  - name: 架空 太一
+    role: 情報システム部長
+    company: 架空商事株式会社
+    aliases: ["架空", "架空さん", "部長"]
+  - name: 見本 花子
+    role: プロジェクトマネージャ
+    company: サンプルソフト株式会社
+    aliases: ["見本", "見本さん", "PM"]
+  - name: 試作 次郎
+    role: テックリード
+    company: サンプルソフト株式会社
+    aliases: ["試作", "試作さん"]
+
+topic_guidelines: |
+  アジェンダ単位でトピックを分ける。要件・仕様の検討と、スケジュール・体制の話題は分離する。
+
+minutes_sections:
+  - 会議概要
+  - 決定事項
+  - 検討事項(要件・目標値・見積)
+  - ToDo(担当者・期限)
+  - 懸念事項
+  - 次回アクション
+
+style:
+  tone: 敬体(です・ます)
+  person: 三人称
+  tense: 過去形
+
+notes: |
+  略語:WMS=倉庫管理システム、UT=単体テスト、IT=結合テスト
